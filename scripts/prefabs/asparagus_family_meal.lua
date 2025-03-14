@@ -1,5 +1,8 @@
 require "prefabutil"
 
+-- 导入GLOBAL
+local GLOBAL = _G
+
 local assets =
 {
   Asset("ANIM", "anim/asparagus_family_meal.zip"),
@@ -49,10 +52,22 @@ local function fn(Sim)
     inst.components.perishable:StartPerishing()
     inst.components.perishable.onperishreplacement = "spoiled_food"
 
+    inst.components.edible:SetOnEatenFn(function(inst, eater)
+        if GLOBAL.ApplyAsparagusFoodEffects ~= nil then
+            GLOBAL.ApplyAsparagusFoodEffects(inst, eater, "asparagus_family_meal")
+        end
+        
+        -- 添加食用提示消息
+        if eater.components.talker then
+            eater.components.talker:Say("芦笋全家桶！饱腹感十足，但感觉有点不适...")
+        end
+    end)
+
 return inst
 end
 STRINGS.NAMES.ASPARAGUS_FAMILY_MEAL = "芦笋全家桶"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.ASPARAGUS_FAMILY_MEAL = "严选四芦荟的高质量配方，芦笋满满的爱。"
 
+local prefabs = {}
 
-return Prefab("common/inventory/asparagus_family_meal", fn, assets, prefabs )
+return Prefab("common/inventory/asparagus_family_meal", fn, assets, prefabs)

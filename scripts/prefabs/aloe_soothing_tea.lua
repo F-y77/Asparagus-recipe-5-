@@ -1,5 +1,8 @@
 require "prefabutil"
 
+-- 导入GLOBAL
+local GLOBAL = _G
+
 local assets =
 {
   Asset("ANIM", "anim/aloe_soothing_tea.zip"),
@@ -34,6 +37,10 @@ local function fn(Sim)
     inst.components.edible.hungervalue = 12
     inst.components.edible.sanityvalue = 55
 
+    inst:AddComponent("temperature")
+    inst.components.temperature.current = TUNING.COLD_FOOD_BONUS_TEMP
+    inst.components.temperature.inherentinsulation = TUNING.INSULATION_MED
+
     inst:AddComponent("stackable")
     inst.components.stackable.maxsize = TUNING.STACK_SIZE_SMALLITEM
 
@@ -49,10 +56,24 @@ local function fn(Sim)
     inst.components.perishable:StartPerishing()
     inst.components.perishable.onperishreplacement = "spoiled_food"
 
-return inst
+    -- 添加oneatenfn回调
+    inst.components.edible:SetOnEatenFn(function(inst, eater)
+        if GLOBAL.ApplyAsparagusFoodEffects ~= nil then
+            GLOBAL.ApplyAsparagusFoodEffects(inst, eater, "aloe_soothing_tea")
+        end
+        
+        -- 添加食用提示消息
+        if eater.components.talker then
+            eater.components.talker:Say("芦笋芦荟舒缓茶让我的精神焕然一新！")
+        end
+    end)
+
+    return inst
 end
+
 STRINGS.NAMES.ALOE_SOOTHING_TEA = "芦笋芦荟舒缓茶"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.ALOE_SOOTHING_TEA = "严选三芦荟1冰的高质量配方；下午茶休闲一下，回复精气神！"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.ALOE_SOOTHING_TEA = "严选三芦荟1冰的高质量配方；下午茶休闲一下，回复精气神！饮用后可额外恢复精神值。"
 
+local prefabs = {}
 
-return Prefab("common/inventory/aloe_soothing_tea", fn, assets, prefabs )
+return Prefab("common/inventory/aloe_soothing_tea", fn, assets, prefabs)
